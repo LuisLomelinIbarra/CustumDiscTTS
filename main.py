@@ -63,7 +63,7 @@ class VoiceMenu(discord.ui.View):
 
     @discord.ui.button(label='Old (gTTS)', style=discord.ButtonStyle.grey)
     async def old_button(self, button:discord.ui.Button, interaction: discord.Interaction):
-        voiceSource.selectVoice('Alice')
+        voiceSource.selectVoice('gTTS')
         await interaction.response.send_message("Selected default voice")
         self.stop()
     
@@ -100,7 +100,7 @@ class SufixMenu(discord.ui.View):
             voiceSource.sufix = select_item.values[0]
         else:
             voiceSource.sufix=''
-        await interaction.response.send_message(f"Selected suffix : {select_item.values[0]}")
+        await interaction.response.send_message(f"Changed suffix")
         self.stop()
     
     @discord.ui.button(label='Default (None)', style=discord.ButtonStyle.grey)

@@ -26,6 +26,7 @@ class Mimic3AudioFetcher():
     def fetchAudio(self,text,filename, sufix=''):
         if sufix:
             text +=sufix
+        print(f'http://{self.url}:{self.port}/api/tts?voice={self.voice}')
         audio = requests.post(f'http://{self.url}:{self.port}/api/tts?voice={self.voice}',data=text)
         with open(f'{filename}.wav','wb') as f:
             f.write(audio.content)
