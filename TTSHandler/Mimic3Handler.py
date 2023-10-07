@@ -14,7 +14,7 @@ class Mimic3Voices(Enum):
 
 
 class Mimic3AudioFetcher():
-    def __init__(self, voice = Mimic3Voices.ALICE, serverurl='localhost',port=59125) -> None:
+    def __init__(self, voice = Mimic3Voices.ALICE.value, serverurl='localhost',port=59125) -> None:
         self.voice = voice
         self.url=serverurl
         self.port = port
