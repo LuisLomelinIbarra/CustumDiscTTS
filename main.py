@@ -1,18 +1,22 @@
-
-import discord
+from dotenv import load_dotenv
 from discord.ext import commands
+
+from TTSHandler import TTSSource
+import discord
+
 import os
 import asyncio
-import keep_alive
-from gtts import gTTS
 import hashlib
 import time
 
 
+load_dotenv()
 
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
-TOKEN = os.environ['BOT_TOKEN']
+TOKEN = os.getenv('BOT_TOKEN') #os.environ['BOT_TOKEN']
+
+MIMIC_URL = os.getenv('MIMIC3')
 
 FFMPEG_OPTIONS = {'options': '-vn'}
 
@@ -26,11 +30,89 @@ bot = commands.Bot(
     help_command=help_command,
     intents=intents)
 
+voiceSource = TTSSource(mimicurl=MIMIC_URL)
 
 @bot.event
 async def on_ready():
     print("Logged in as [{0.user}]".format(bot))
 
+
+######################Button Menus########################################################
+class VoiceMenu(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.value = None
+    
+    @discord.ui.select(
+            placeholder="Which Voice to select",
+            options = [
+                discord.SelectOption(label="Alice", value='Alice'),
+                discord.SelectOption(label="gTTS", value='gTTS'),
+            ]
+    )
+    async def select_voice(self, select_item: discord.ui.Select, interaction: discord.Interaction):
+        voiceSource.selectVoice(select_item.values[0])
+        await interaction.response.send_message(f"Selected voice {select_item.values[0]}")
+        self.stop()
+    
+    @discord.ui.button(label='Default (Alice)', style=discord.ButtonStyle.grey)
+    async def default_button(self, button:discord.ui.Button, interaction: discord.Interaction):
+        voiceSource.selectVoice('Alice')
+        await interaction.response.send_message("Selected default voice")
+        self.stop()
+    
+    @discord.ui.button(label='Cancel',style=discord.ButtonStyle.red)
+    async def menu3(self,button:discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_message("Stopping!")
+        self.value=False
+        self.stop()
+    
+
+@bot.command(name='VoiceMenu',aliases=['vm','VM','Vm'], help='Menu to change the voice')
+async def voicemenu(ctx):
+    view = VoiceMenu()
+    await ctx.reply(view=view)
+
+
+# Menu to add a sufix
+
+class SuffixMenu(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.value = None
+    
+    @discord.ui.select(
+            placeholder="Which Suffix to select",
+            options = [
+                discord.SelectOption(label="None",value=''),
+                discord.SelectOption(label="Sweetie", value=' , sweetie'),
+                discord.SelectOption(label="Sweaty", value=' , sweaty '),
+            ]
+    )
+    async def select_voice(self, select_item: discord.ui.Select, interaction: discord.Interaction):
+        voiceSource.sufix = select_item.values[0]
+        await interaction.response.send_message(f"Selected suffix : {select_item.values[0]}")
+        self.stop()
+    
+    @discord.ui.button(label='Default (Alice)', style=discord.ButtonStyle.grey)
+    async def default_button(self, button:discord.ui.Button, interaction: discord.Interaction):
+        voiceSource.sufix = ''
+        await interaction.response.send_message("Selected default sufix (None)")
+        self.stop()
+    
+    @discord.ui.button(label='Cancel',style=discord.ButtonStyle.red)
+    async def menu3(self,button:discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_message("Stopping!")
+        self.value=False
+        self.stop()
+    
+
+@bot.command(name='SufixMenu',aliases=['sx','SX','Sx'], help='Menu to change the suffix')
+async def voicemenu(ctx):
+    view = VoiceMenu()
+    await ctx.reply(view=view)
+
+##############################################################################
 #####  
 # Function: generateMP3fromText
 # Desc: Given a text generates a mp3 file with a hashed name,
@@ -41,23 +123,22 @@ def generateMP3fromText(intxt):
     
     current_time = str(t)
     hashtxt = intxt + current_time
-    mp3filename = hashlib.sha256(hashtxt.encode('utf-8')).hexdigest()
+    filename = hashlib.sha256(hashtxt.encode('utf-8')).hexdigest()
     readOutLoud = (intxt)
-    tts = gTTS(text=readOutLoud, lang='en') #, tld='ie')
-    tts.save(mp3filename + ".mp3")
+    voiceSource.talk(readOutLoud,filename)
     #os.remove(mp3filename+".mp3")
-    return mp3filename
+    return filename
 
 #####  
 # Function: deleteSoundFile
 # Desc: Given a filename deletes the given file
 # 
 def deleteSoundFile(filename):
-  try:
-    os.remove(filename + ".mp3")
-  except Exception as e:
-    print("ERROR DELETEING ERROR MSG: ")
-    print(e)
+    try:
+        os.remove(filename + voiceSource.extention)
+    except Exception as e:
+        print("ERROR DELETEING ERROR MSG: ")
+        print(e)
 
 #####  
 # Function: playAudio
@@ -65,7 +146,7 @@ def deleteSoundFile(filename):
 # 
 async def playAudio(filename, voice_channel):
   print('is connected')
-  audio_source = discord.FFmpegPCMAudio('./' + filename + '.mp3', before_options=f'-nostdin -ss 0.0', options='-vn -b:a 128k -af bass=g=2')
+  audio_source = discord.FFmpegPCMAudio('./' + filename + voiceSource.extention, before_options=f'-nostdin -ss 0.0', options='-vn -b:a 128k -af bass=g=2')
   print(audio_source)
   while voice_channel.is_playing():
     await asyncio.sleep(1)
@@ -161,5 +242,5 @@ async def say(ctx, *, txt):
 async def on_message(message):
     await bot.process_commands(message)
 
-keep_alive.keep_alive()
+
 bot.run(TOKEN)

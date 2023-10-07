@@ -5,7 +5,8 @@ bot aims to make TTS audible for just the people on the call, allowing the previ
 everybody else on the call.
 
 It works using:
-* Discord.py
+* Py-cord
 * gTTS
+* Mimic3
 
 If you find this I hope it's useful to you!!!
