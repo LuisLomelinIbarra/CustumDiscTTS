@@ -3,6 +3,7 @@ from discord.ext import commands
 
 from TTSHandler import TTSSource
 import discord
+from TTSHandler.Mimic3Handler import Mimic3Voices
 
 import os
 import asyncio
@@ -38,6 +39,8 @@ async def on_ready():
 
 
 ######################Button Menus########################################################
+voice_names = [discord.SelectOption(label=x.lower().capitalize(), value=x.lower().capitalize()) for x in list(map(lambda x: x.name, Mimic3Voices))]
+voice_names.append(discord.SelectOption(label="gTTS", value='gTTS'))
 class VoiceMenu(discord.ui.View):
     def __init__(self):
         super().__init__()
@@ -45,24 +48,27 @@ class VoiceMenu(discord.ui.View):
     
     @discord.ui.select(
             placeholder="Which Voice to select",
-            options = [
-                discord.SelectOption(label="Alice", value='Alice'),
-                discord.SelectOption(label="gTTS", value='gTTS'),
-            ]
+            options = voice_names
     )
     async def select_voice(self, select_item: discord.ui.Select, interaction: discord.Interaction):
         voiceSource.selectVoice(select_item.values[0])
         await interaction.response.send_message(f"Selected voice {select_item.values[0]}")
         self.stop()
     
-    @discord.ui.button(label='Default (Alice)', style=discord.ButtonStyle.grey)
+    @discord.ui.button(label='Default (Alice)', style=discord.ButtonStyle.blurple)
     async def default_button(self, button:discord.ui.Button, interaction: discord.Interaction):
+        voiceSource.selectVoice('Alice')
+        await interaction.response.send_message("Selected default voice")
+        self.stop()
+
+    @discord.ui.button(label='Old (gTTS)', style=discord.ButtonStyle.grey)
+    async def old_button(self, button:discord.ui.Button, interaction: discord.Interaction):
         voiceSource.selectVoice('Alice')
         await interaction.response.send_message("Selected default voice")
         self.stop()
     
     @discord.ui.button(label='Cancel',style=discord.ButtonStyle.red)
-    async def menu3(self,button:discord.ui.Button, interaction: discord.Interaction):
+    async def cancel(self,button:discord.ui.Button, interaction: discord.Interaction):
         await interaction.response.send_message("Stopping!")
         self.value=False
         self.stop()
@@ -76,7 +82,7 @@ async def voicemenu(ctx):
 
 # Menu to add a sufix
 
-class SuffixMenu(discord.ui.View):
+class SufixMenu(discord.ui.View):
     def __init__(self):
         super().__init__()
         self.value = None
@@ -84,32 +90,35 @@ class SuffixMenu(discord.ui.View):
     @discord.ui.select(
             placeholder="Which Suffix to select",
             options = [
-                discord.SelectOption(label="None",value=''),
+                discord.SelectOption(label="None",value='None'),
                 discord.SelectOption(label="Sweetie", value=' , sweetie'),
-                discord.SelectOption(label="Sweaty", value=' , sweaty '),
+                discord.SelectOption(label="Sweaty", value=' , sweaty')
             ]
     )
-    async def select_voice(self, select_item: discord.ui.Select, interaction: discord.Interaction):
-        voiceSource.sufix = select_item.values[0]
+    async def select_suffix(self, select_item: discord.ui.Select, interaction: discord.Interaction):
+        if select_item.values[0] != 'None':
+            voiceSource.sufix = select_item.values[0]
+        else:
+            voiceSource.sufix=''
         await interaction.response.send_message(f"Selected suffix : {select_item.values[0]}")
         self.stop()
     
-    @discord.ui.button(label='Default (Alice)', style=discord.ButtonStyle.grey)
+    @discord.ui.button(label='Default (None)', style=discord.ButtonStyle.grey)
     async def default_button(self, button:discord.ui.Button, interaction: discord.Interaction):
         voiceSource.sufix = ''
         await interaction.response.send_message("Selected default sufix (None)")
         self.stop()
     
     @discord.ui.button(label='Cancel',style=discord.ButtonStyle.red)
-    async def menu3(self,button:discord.ui.Button, interaction: discord.Interaction):
+    async def cancel(self,button:discord.ui.Button, interaction: discord.Interaction):
         await interaction.response.send_message("Stopping!")
         self.value=False
         self.stop()
     
 
-@bot.command(name='SufixMenu',aliases=['sx','SX','Sx'], help='Menu to change the suffix')
-async def voicemenu(ctx):
-    view = VoiceMenu()
+@bot.command(name='SufixMenu',aliases=['sf','SF','Sf'], help='Menu to change the suffix')
+async def sufixmenu(ctx):
+    view = SufixMenu()
     await ctx.reply(view=view)
 
 ##############################################################################

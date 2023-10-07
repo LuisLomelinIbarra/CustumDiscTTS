@@ -3,6 +3,15 @@ from enum import Enum
 
 class Mimic3Voices(Enum):
     ALICE = 'en_US/vctk_low#p239'
+    RAIN = 'en_US/vctk_low#p250'
+    STEVEN = 'en_US/vctk_low#p259'
+    DOUG = 'en_US/vctk_low#p263'
+    MARY = 'en_US/vctk_low#p283'
+    DORY = 'en_US/vctk_low#p276'
+    JOHN = 'en_US/vctk_low#p270'
+    ALAN = 'en_UK/apope_low'
+
+
 
 class Mimic3AudioFetcher():
     def __init__(self, voice = Mimic3Voices.ALICE, serverurl='localhost',port=59125) -> None:
