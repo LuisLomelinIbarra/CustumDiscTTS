@@ -12,7 +12,7 @@ class Mimic3AudioFetcher():
     
     def changeVoice(self, voice):
         if voice.upper() in list(map(lambda x: x.name, Mimic3Voices)):
-            self.voice = voice
+            self.voice = Mimic3Voices[voice.upper()].value
     
     def fetchAudio(self,text,filename, sufix=''):
         if sufix:
