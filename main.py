@@ -47,7 +47,7 @@ class VoiceMenu(discord.ui.View):
         self.value = None
     
     @discord.ui.select(
-            placeholder="Which Voice to select",
+            placeholder=f"Which Voice to select?",
             options = voice_names
     )
     async def select_voice(self, select_item: discord.ui.Select, interaction: discord.Interaction):
